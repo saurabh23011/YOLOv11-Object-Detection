@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOLOv11 Object Detection</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      margin-top: 50px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+    }
+    .card-header {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+    #output-image, #webcam-feed {
+      max-width: 100%;
+      border: 2px solid #fff;
+      margin-top: 10px;
+    }
+    .btn {
+      margin: 5px 0;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card shadow">
+      <div class="card-header">YOLOv11 Object Detection</div>
+      <div class="card-body">
+        <!-- Upload Image -->
+        <form id="image-form" class="mb-3">
+          <div class="mb-3">
+            <label for="file" class="form-label">Upload an Image</label>
+            <input type="file" id="file" class="form-control" accept="image/*" required>
+          </div>
+          <div class="mb-3">
+            <label for="confidence" class="form-label">Confidence Threshold</label>
+            <input type="number" id="confidence" class="form-control" min="0.1" max="1.0" step="0.1" value="0.5">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Process Image</button>
+        </form>
+        <div>
+          <img id="output-image" class="img-fluid" alt="Processed Image">
+        </div>
+
+        <hr>
+
+        <!-- Webcam Feed -->
+        <div class="text-center">
+          <button id="start-webcam" class="btn btn-success">Start Webcam</button>
+          <button id="stop-webcam" class="btn btn-danger">Stop Webcam</button>
+        </div>
+        <div>
+          <img id="webcam-feed" class="img-fluid" alt="Webcam Stream">
+        </div>
+
+        <hr>
+
+        <!-- Upload Video -->
+        <form id="video-form" class="mb-3">
+          <div class="mb-3">
+            <label for="video-file" class="form-label">Upload a Video</label>
+            <input type="file" id="video-file" class="form-control" accept="video/*" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Process Video</button>
+        </form>
+      </div>
+    </div>
+    <footer>&copy; 2024 YOLOv11 Object Detection | All Rights Reserved</footer>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Process Image
+      $("#image-form").on("submit", function (e) {
+        e.preventDefault();
+        const fileInput = $("#file")[0].files[0];
+        const confidence = $("#confidence").val();
+
+        if (fileInput) {
+          const formData = new FormData();
+          formData.append("file", fileInput);
+          formData.append("confidence", confidence);
+
+          $.ajax({
+            url: "/process_image",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+              $("#output-image").attr("src", response.processed_image);
+            },
+            error: function () {
+              alert("Error processing the image.");
+            }
+          });
+        }
+      });
+
+      // Start Webcam
+      $("#start-webcam").on("click", function () {
+        $("#webcam-feed").attr("src", "/video_feed");
+      });
+
+      // Stop Webcam
+      $("#stop-webcam").on("click", function () {
+        $.get("/stop_webcam", function () {
+          $("#webcam-feed").removeAttr("src");
+        });
+      });
+
+      // Process Video
+      $("#video-form").on("submit", function (e) {
+        e.preventDefault();
+        const videoFile = $("#video-file")[0].files[0];
+
+        if (videoFile) {
+          const formData = new FormData();
+          formData.append("file", videoFile);
+
+          $.ajax({
+            url: "/process_video",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+              alert("Video uploaded and processed successfully!");
+            },
+            error: function () {
+              alert("Error processing the video.");
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
